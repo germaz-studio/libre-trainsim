@@ -41,7 +41,7 @@ func update_selected_rail(node: Node) -> void:
 func update_itemList() -> void:
 	$Tab/TrackObjects/jListTrackObjects.clear()
 	var track_objects: Array = currentRail.track_objects
-	Logger.vlog(track_objects)
+	LTSLogger.vlog(track_objects)
 	for x in range(track_objects.size()):
 		if track_objects[x].description == null:
 			track_objects[x].queue_free()
@@ -50,19 +50,19 @@ func update_itemList() -> void:
 
 
 func _on_jListTrackObjects_user_removed_entries(entry_names: Array) -> void:
-	Logger.vlog(currentRail.track_objects)
+	LTSLogger.vlog(currentRail.track_objects)
 	for entry_name in entry_names:
 		var track_object: Node = currentRail.get_track_object(entry_name)
 		var track_object_name: String = track_object.name
 		track_object.queue_free()
 		currentRail.track_objects.erase(track_object)
-		Logger.log("TrackObject " + track_object_name + " deleted")
+		LTSLogger.log("TrackObject " + track_object_name + " deleted")
 	update_itemList()
 
 
 func _on_jListTrackObjects_user_added_entry(entry_name: String) -> void:
-	Logger.vlog(entry_name)
-	var track_object: Node = track_object_resource.instance()
+	LTSLogger.vlog(entry_name)
+	var track_object: Node = track_object_resource.instantiate()
 	track_object.description = entry_name
 	track_object.name = currentRail.name + " " + entry_name
 	track_object.attached_rail = currentRail.name
@@ -71,7 +71,7 @@ func _on_jListTrackObjects_user_added_entry(entry_name: String) -> void:
 	world.chunk_manager.add_track_object(track_object)
 
 	track_object.attach_to_rail(currentRail)
-	Logger.log("Created track object " + track_object.name)
+	LTSLogger.log("Created track object " + track_object.name)
 	update_object_tab()
 
 
@@ -79,7 +79,7 @@ func _on_jListTrackObjects_user_renamed_entry(old_name: String, new_name: String
 	var track_object: Node = currentRail.get_track_object(old_name)
 	track_object.description = new_name
 	track_object.name = currentRail.name + " " + new_name
-	Logger.log("TrackObject renamed from "+ old_name + " to " + new_name)
+	LTSLogger.log("TrackObject renamed from "+ old_name + " to " + new_name)
 
 
 func _on_jListTrackObjects_user_duplicated_entries(source_entry_names: Array, duplicated_entry_names: Array) -> void:
@@ -88,14 +88,14 @@ func _on_jListTrackObjects_user_duplicated_entries(source_entry_names: Array, du
 		var duplicated_entry_name: String = duplicated_entry_names[i]
 		var source_track_object: Node = currentRail.get_track_object(source_entry_name)
 		copy_track_object_to_current_rail(source_track_object, duplicated_entry_name)
-		Logger.log("TrackObject " +  source_entry_name + " duplicated.")
+		LTSLogger.log("TrackObject " +  source_entry_name + " duplicated.")
 
 
 func copy_track_object_to_current_rail(source_track_object: Node, new_description: String, mirror: bool = false) -> void:
 	if source_track_object == null:
 		return
 	# order is important
-	var new_track_object: Node = track_object_resource.instance()
+	var new_track_object: Node = track_object_resource.instantiate()
 	new_track_object.materials = []
 	new_track_object.set_data(source_track_object.get_data())
 	new_track_object.name = currentRail.name + " " + new_description
@@ -131,7 +131,7 @@ func _on_jListTrackObjects_user_selected_entry(entry_name: String):
 func update_Position() -> void:
 	if currentTO == null:
 		return
-	$Tab/TrackObjects/Settings/Tab/Position/WholeRail.pressed = currentTO.wholeRail
+	$Tab/TrackObjects/Settings/Tab/Position/WholeRail.button_pressed = currentTO.wholeRail
 
 	$Tab/TrackObjects/Settings/Tab/Position/StartPos/SpinBox.value = currentTO.on_rail_position
 	$Tab/TrackObjects/Settings/Tab/Position/EndPosition/SpinBox.value = currentTO.on_rail_position + currentTO.length
@@ -164,7 +164,7 @@ func _on_SavePosition_pressed() -> void:
 	currentTO.on_rail_position = $Tab/TrackObjects/Settings/Tab/Position/StartPos/SpinBox.value
 	currentTO.length = $Tab/TrackObjects/Settings/Tab/Position/EndPosition/SpinBox.value - $Tab/TrackObjects/Settings/Tab/Position/StartPos/SpinBox.value
 	currentTO.update()
-	Logger.log("Position Saved")
+	LTSLogger.log("Position Saved")
 
 
 func _on_SavePositioning_pressed() -> void:
@@ -180,10 +180,10 @@ func _on_SavePositioning_pressed() -> void:
 	currentTO.randomRotation = $"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer2/CheckBoxRandRot".pressed
 	currentTO.randomScale = $"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer2/CheckBoxRadScal".pressed
 	currentTO.randomScaleFactor = $"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer2/RandomScale".value
-	currentTO.rotationObjects = deg2rad($"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer/Rotation".value)
+	currentTO.rotationObjects = deg_to_rad($"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer/Rotation".value)
 	currentTO.placeLast = $"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer/PlaceLast".pressed
 	currentTO.applySlopeRotation = $"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer/applySlopeRotation".pressed
-	Logger.log("Positioning Saved")
+	LTSLogger.log("Positioning Saved")
 	update_current_rail_attachment()
 
 
@@ -197,19 +197,19 @@ func update_positioning() -> void:
 	$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer/SpawnRate".value = currentTO.spawnRate
 	$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer/Rows".value = currentTO.rows
 	$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer/Height".value = currentTO.height
-	$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer2/CheckBoxRandLoc".pressed = currentTO.randomLocation
+	$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer2/CheckBoxRandLoc".button_pressed = currentTO.randomLocation
 	$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer2/RandomLocation".value = currentTO.randomLocationFactor
-	$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer2/CheckBoxRandRot".pressed = currentTO.randomRotation
-	$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer2/CheckBoxRadScal".pressed = currentTO.randomScale
+	$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer2/CheckBoxRandRot".button_pressed = currentTO.randomRotation
+	$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer2/CheckBoxRadScal".button_pressed = currentTO.randomScale
 	$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer2/RandomScale".value = currentTO.randomScaleFactor
-	$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer/Rotation".value = rad2deg(currentTO.rotationObjects)
-	$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer/PlaceLast".pressed = currentTO.placeLast
-	$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer/applySlopeRotation".pressed = currentTO.applySlopeRotation
-	Logger.log("Updating...")
+	$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer/Rotation".value = rad_to_deg(currentTO.rotationObjects)
+	$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer/PlaceLast".button_pressed = currentTO.placeLast
+	$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer/applySlopeRotation".button_pressed = currentTO.applySlopeRotation
+	LTSLogger.log("Updating...")
 
 
 func update_current_rail_attachment() -> void: ## UPDATE
-	Logger.log("Updating...")
+	LTSLogger.log("Updating...")
 	currentTO.update()
 	if currentTO.description.begins_with("Pole"):
 		currentRail.update()
@@ -223,7 +223,7 @@ func _on_jListTrackObjects_user_copied_entries(entry_names: Array) -> void:
 	for entry_name in entry_names:
 		copyTOArray.append(currentRail.get_track_object(entry_name).duplicate(DUPLICATE_SCRIPTS))
 	$"Tab/TrackObjects/Settings".visible = true
-	Logger.log("TrackObject(s) copied. Please don't delete the TrackObject(s), until you pasted a copy of it/them.")
+	LTSLogger.log("TrackObject(s) copied. Please don't delete the TrackObject(s), until you pasted a copy of it/them.")
 
 
 func _on_jListTrackObjects_user_pasted_entries(_source_entry_names: Array, _source_jList_id, pasted_entry_names: Array) -> void:
@@ -311,10 +311,10 @@ func _on_BuildingSettings_updated() -> void:
 func _on_OptionButton_item_selected(index: int) -> void:
 	if currentTO.sides == PlatformSide.LEFT and index == PlatformSide.RIGHT:
 		currentTO.rotationObjects += PI
-		$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer/Rotation".value = rad2deg(currentTO.rotationObjects)
+		$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer/Rotation".value = rad_to_deg(currentTO.rotationObjects)
 	elif currentTO.sides == PlatformSide.RIGHT and index == PlatformSide.LEFT:
 		currentTO.rotationObjects -= PI
-		$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer/Rotation".value = rad2deg(currentTO.rotationObjects)
+		$"Tab/TrackObjects/Settings/Tab/Object Positioning/GridContainer/Rotation".value = rad_to_deg(currentTO.rotationObjects)
 	currentTO.sides = index
 	update_current_rail_attachment()
 

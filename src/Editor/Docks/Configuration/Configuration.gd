@@ -1,11 +1,11 @@
-extends WindowDialog
+extends Window
 
 var world_config: WorldConfig
 var save_path: String
 
 func _ready() -> void:
 	var editor = find_parent("Editor")
-	save_path = editor.current_track_path.plus_file(editor.current_track_name) + "_config.tres"
+	save_path = editor.current_track_path.path_join(editor.current_track_name) + "_config.tres"
 	world_config = load(save_path)
 	load_stored_config()
 
@@ -29,9 +29,9 @@ func save_config() -> void:
 	world_config.editor_notes = $Configuration/Notes.text
 
 	if ResourceSaver.save(save_path, world_config) != OK:
-		Logger.err("Error saving world config at '%s'" % save_path, self)
+		LTSLogger.err("Error saving world config at '%s'" % save_path, self)
 		return
-	Logger.log("World Config saved.")
+	LTSLogger.log("World Config saved.")
 
 
 func load_stored_config() -> void:

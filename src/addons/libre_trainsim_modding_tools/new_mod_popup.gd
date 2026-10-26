@@ -1,5 +1,5 @@
-tool
-extends WindowDialog
+@tool
+extends Window
 
 var base_control
 
@@ -7,8 +7,8 @@ var base_control
 func validate():
 	var unique_name = $MarginContainer/VBoxContainer/Grid/Input_Unique.text
 	unique_name = FileTools.to_valid_filename(unique_name)
-	if unique_name.empty():
-		var notice := preload("empty_popup.tscn").instance()
+	if unique_name.is_empty():
+		var notice := preload("empty_popup.tscn").instantiate()
 		add_child(notice)
 		notice.popup_centered()
 		return
@@ -18,16 +18,16 @@ func validate():
 
 	create_mod(author_name, unique_name, display_name)
 	hide()
-	var notice = preload("notice_popup.tscn").instance()
+	var notice = preload("notice_popup.tscn").instantiate()
 	base_control.add_child(notice)
 	notice.popup_centered()
 	queue_free()
 
 
 func create_mod(author_name: String, mod_unique_name: String, mod_display_name: String):
-	var mod_path = "res://Mods".plus_file(mod_unique_name)
+	var mod_path = "res://Mods".path_join(mod_unique_name)
 
-	var d = Directory.new()
+	var d = DirAccess.open("res://")
 	d.open("res://")
 	d.make_dir_recursive(mod_path)
 	d.change_dir(mod_path)
@@ -45,20 +45,20 @@ func create_mod(author_name: String, mod_unique_name: String, mod_display_name: 
 	authors.developers = [author_name]
 	authors.contributors = []
 	authors.translators = []
-	ResourceSaver.save(mod_path.plus_file("authors.tres"), authors, ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_REPLACE_SUBRESOURCE_PATHS)
+	ResourceSaver.save(mod_path.path_join("authors.tres"), authors, ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_REPLACE_SUBRESOURCE_PATHS)
 
 	var content = ModContentDefinition.new()
 	content.unique_name = mod_unique_name
 	content.display_name = mod_display_name
 
-	content.environment_folders = [mod_path.plus_file("Environments")]
-	content.material_folders = [mod_path.plus_file("Materials")]
-	content.music_folders = [mod_path.plus_file("Music")]
-	content.object_folders = [mod_path.plus_file("Objects")]
-	content.persons_folders = [mod_path.plus_file("Persons")]
-	content.rail_type_folders = [mod_path.plus_file("RailTypes")]
-	content.signal_type_folders = [mod_path.plus_file("SignalTypes")]
-	content.sound_folders = [mod_path.plus_file("Sounds")]
-	content.texture_folders = [mod_path.plus_file("Textures")]
+	content.environment_folders = [mod_path.path_join("Environments")]
+	content.material_folders = [mod_path.path_join("Materials")]
+	content.music_folders = [mod_path.path_join("Music")]
+	content.object_folders = [mod_path.path_join("Objects")]
+	content.persons_folders = [mod_path.path_join("Persons")]
+	content.rail_type_folders = [mod_path.path_join("RailTypes")]
+	content.signal_type_folders = [mod_path.path_join("SignalTypes")]
+	content.sound_folders = [mod_path.path_join("Sounds")]
+	content.texture_folders = [mod_path.path_join("Textures")]
 
-	ResourceSaver.save(mod_path.plus_file("content.tres"), content, ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_REPLACE_SUBRESOURCE_PATHS)
+	ResourceSaver.save(mod_path.path_join("content.tres"), content, ResourceSaver.FLAG_CHANGE_PATH | ResourceSaver.FLAG_REPLACE_SUBRESOURCE_PATHS)

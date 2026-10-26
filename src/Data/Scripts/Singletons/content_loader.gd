@@ -24,9 +24,9 @@ func load_content_packs() -> void:
 	while i < len(found_mods["content.tres"]):
 		var content: ModContentDefinition = found_mods["content.tres"][i]
 		if content == null:
-			Logger.warn("Found pack %s, but could not load its content.tres file!" % found_mods["content.pck"][i], self)
-			found_mods["content.tres"].remove(i)
-			found_mods["content.pck"].remove(i)
+			LTSLogger.warn("Found pack %s, but could not load its content.tres file!" % found_mods["content.pck"][i], self)
+			found_mods["content.tres"].remove_at(i)
+			found_mods["content.pck"].remove_at(i)
 			continue
 		found_mods["unique_name"].append(content.unique_name)
 		i += 1
@@ -34,7 +34,7 @@ func load_content_packs() -> void:
 	# build dependency tree
 	var mods_to_load = build_dependency_tree()  # return leaf nodes
 
-	while not mods_to_load.empty():
+	while not mods_to_load.is_empty():
 		var node: Node = mods_to_load.pop_front()
 		if node == null:
 			continue
@@ -48,13 +48,13 @@ func load_content_packs() -> void:
 
 		if OS.has_feature("standalone"):
 			if ProjectSettings.load_resource_pack(pack, true):
-				Logger.vlog("Loading Content Pack %s successfully finished" % pack)
+				LTSLogger.vlog("Loading Content Pack %s successfully finished" % pack)
 				append_content_to_global_repo(content)
 			else:
-				Logger.err("Something went wrong when loading pack %s, not loading mods that require it!" % pack, self)
+				LTSLogger.err("Something went wrong when loading pack %s, not loading mods that require it!" % pack, self)
 				_remove_top_most_mod_except_siblings(node)
 		else:
-			Logger.warn("Skipping pack loading in editor build, because of https://github.com/godotengine/godot/issues/16798", self)
+			LTSLogger.warn("Skipping pack loading in editor build, because of https://github.com/godotengine/godot/issues/16798", self)
 
 	dependency_tree_root.queue_free()
 
@@ -66,11 +66,11 @@ func find_content_packs() -> void:
 	Root.crawl_directory(found_content_packs, OS.get_executable_path().get_base_dir(), ["pck"], 2)
 	Root.crawl_directory(found_content_packs, "user://addons/", ["pck"], 2)
 
-	Logger.vlog("Found Content Packs: %s" % [found_content_packs])
+	LTSLogger.vlog("Found Content Packs: %s" % [found_content_packs])
 
 	for content_pack in found_content_packs:
 		found_mods["content.pck"].append(content_pack)
-		found_mods["content.tres"].append(load(content_pack.get_base_dir().plus_file("content.tres")))
+		found_mods["content.tres"].append(load(content_pack.get_base_dir().path_join("content.tres")))
 
 
 func build_dependency_tree() -> Array:
@@ -83,11 +83,11 @@ func build_dependency_tree() -> Array:
 	while i < len(found_mods["unique_name"]):
 		# make sure mods are unique
 		var unique_name = found_mods["unique_name"][i]
-		if dependency_tree_root.find_node(unique_name, true, false):
-			Logger.err("Multiple mods with the same unique name '%s' found! Removing duplicate!" % unique_name, self)
-			found_mods["unique_name"].remove(i)
-			found_mods["content.tres"].remove(i)
-			found_mods["content.pck"].remove(i)
+		if dependency_tree_root.find_child(unique_name, true, false):
+			LTSLogger.err("Multiple mods with the same unique name '%s' found! Removing duplicate!" % unique_name, self)
+			found_mods["unique_name"].remove_at(i)
+			found_mods["content.tres"].remove_at(i)
+			found_mods["content.pck"].remove_at(i)
 			continue
 		var node = Node.new()
 		node.name = unique_name
@@ -96,26 +96,26 @@ func build_dependency_tree() -> Array:
 
 	# reparent mods to what they are required by
 	for mod in found_mods["content.tres"]:
-		var mod_node = dependency_tree_root.find_node(mod.unique_name, true, false)
+		var mod_node = dependency_tree_root.find_child(mod.unique_name, true, false)
 		if mod_node == null:
 			continue
 
 		for dep in mod.depends_on:
 			if mod_node.find_parent(dep.unique_name):
-				Logger.warn("Dependency cycle detected for mod %s !" % mod_node.unique_name, self)
+				LTSLogger.warn("Dependency cycle detected for mod %s !" % mod_node.unique_name, self)
 				_remove_top_most_mod_except_siblings(mod_node)
 				break
 
-			var dep_node = dependency_tree_root.find_node(dep.unique_name, true, false)
+			var dep_node = dependency_tree_root.find_child(dep.unique_name, true, false)
 			if dep_node == null:
-				Logger.warn("Dependency %s not found for mod %s !" % [dep.unique_name, mod.unique_name], self)
+				LTSLogger.warn("Dependency %s not found for mod %s !" % [dep.unique_name, mod.unique_name], self)
 				_remove_top_most_mod_except_siblings(mod_node)
 				break
 
 			var idx = found_mods["unique_name"].find(dep.unique_name)
 			var dep_content = found_mods["content.tres"][idx]
 			if not dep_content._check_semver(dep.version):
-				Logger.warn("Version mismatch for dependency %s of mod %s. Got %s, Require %s." % [dep.unique_name, mod.unique_name, dep_content._semver_to_string(), dep.version], self)
+				LTSLogger.warn("Version mismatch for dependency %s of mod %s. Got %s, Require %s." % [dep.unique_name, mod.unique_name, dep_content._semver_to_string(), dep.version], self)
 				_remove_top_most_mod_except_siblings(mod_node)
 				break
 
@@ -124,7 +124,7 @@ func build_dependency_tree() -> Array:
 
 	var stack := dependency_tree_root.get_children()
 	var load_order := []
-	while not stack.empty():
+	while not stack.is_empty():
 		var child = stack.pop_front()
 		load_order.push_front(child)
 		stack.append_array(child.get_children())
@@ -147,9 +147,9 @@ func _remove_top_most_mod_except_siblings(node: Node) -> void:
 
 	var top_most := _get_top_most_mod(node)
 	var stack := [top_most]
-	while not stack.empty():
+	while not stack.is_empty():
 		var n: Node = stack.pop_front()
-		if n == node or n.find_node(node.name, true, false):
+		if n == node or n.find_child(node.name, true, false):
 			# this mod depends on the broken one, can't load anymore
 			# its children may not depend on it, and be loadable, check them
 			stack.append_array(n.get_children())
@@ -201,7 +201,7 @@ func get_editor_tracks() -> Dictionary:
 
 
 func get_scenarios_for_track(track_folder: String) -> Array:
-	var scenario_dir: String = track_folder.plus_file("scenarios")
+	var scenario_dir: String = track_folder.path_join("scenarios")
 	var result: Array = []
 	Root.crawl_directory(result, scenario_dir, ["tres"], 2)
 	return result

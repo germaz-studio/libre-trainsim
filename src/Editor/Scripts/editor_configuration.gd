@@ -2,12 +2,12 @@ extends Control
 
 
 # TODO: move into project settings?
-onready var editor_directory: String = jSaveManager.get_setting("editor_directory_path", "user://editor/")
-onready var track_list := $PanelContainer/VBoxContainer/TracksList as jList
-onready var editor_path := $PanelContainer/VBoxContainer/HBoxContainer/EditorPath as LineEdit
+@onready var editor_directory: String = jSaveManager.get_setting("editor_directory_path", "user://editor/")
+@onready var track_list := $PanelContainer/VBoxContainer/TracksList as jList
+@onready var editor_path := $PanelContainer/VBoxContainer/HBoxContainer/EditorPath as LineEdit
 
 
-var dir := Directory.new()
+var dir := DirAccess.open("res://")
 var tracks := {}
 
 
@@ -19,11 +19,11 @@ func _ready() -> void:
 
 
 func show() -> void:
-	if tracks.empty():
+	if tracks.is_empty():
 		$PanelContainer/VBoxContainer/TracksList/VBoxContainer/HBoxContainer/Back.grab_focus()
 	else:
 		$PanelContainer/VBoxContainer/TracksList/VBoxContainer/ItemList.grab_focus()
-	.show()
+	super.show()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -41,7 +41,7 @@ func to_file_name(track_name: String) -> String:
 
 func _initialize_editor_directory():
 	if dir.open("user://") != OK:
-		Logger.err("Can't open directory '%s'" % editor_directory, self)
+		LTSLogger.err("Can't open directory '%s'" % editor_directory, self)
 		return
 	dir.make_dir_recursive(editor_directory)
 
@@ -56,42 +56,42 @@ func _initialize_mod_directory(entry_name: String) -> bool:
 	if dir.dir_exists(mod_path):
 		return false
 
-	var worlds_path := "Worlds".plus_file(entry_name)
-	dir.make_dir_recursive(mod_path.plus_file(worlds_path))
-	dir.make_dir_recursive(mod_path.plus_file(worlds_path).plus_file("chunks"))
-	dir.make_dir_recursive(mod_path.plus_file(worlds_path).plus_file("scenarios"))
+	var worlds_path := "Worlds".path_join(entry_name)
+	dir.make_dir_recursive(mod_path.path_join(worlds_path))
+	dir.make_dir_recursive(mod_path.path_join(worlds_path).path_join("chunks"))
+	dir.make_dir_recursive(mod_path.path_join(worlds_path).path_join("scenarios"))
 
 	dir.copy("res://Data/Modules/World-Pattern.tscn", \
-			"%s.tscn" % mod_path.plus_file(worlds_path).plus_file(entry_name))
+			"%s.tscn" % mod_path.path_join(worlds_path).path_join(entry_name))
 
-	var chunk_0_0 := preload("res://Data/Modules/chunk_prefab.tscn").instance() as Chunk
+	var chunk_0_0 := preload("res://Data/Modules/chunk_prefab.tscn").instantiate() as Chunk
 	chunk_0_0.name = "chunk_0_0"
 	chunk_0_0.rails = ["Rail"]
 	var packed_chunk := PackedScene.new()
 	if packed_chunk.pack(chunk_0_0) != OK:
-		Logger.err("Failed to pack default chunk", self)
-	if ResourceSaver.save(mod_path.plus_file(worlds_path).plus_file("chunks").plus_file("chunk_0_0.tscn"), packed_chunk) != OK:
-		Logger.err("Failed to write default chunk to disk", self)
+		LTSLogger.err("Failed to pack default chunk", self)
+	if ResourceSaver.save(mod_path.path_join(worlds_path).path_join("chunks").path_join("chunk_0_0.tscn"), packed_chunk) != OK:
+		LTSLogger.err("Failed to write default chunk to disk", self)
 	chunk_0_0.free()
 
 	var authors := Authors.new()
-	if ResourceSaver.save(mod_path.plus_file("authors.tres"), authors) != OK:
-		Logger.err("Can't save authors at path %s" % mod_path + "authors.tres", self)
+	if ResourceSaver.save(mod_path.path_join("authors.tres"), authors) != OK:
+		LTSLogger.err("Can't save authors at path %s" % mod_path + "authors.tres", self)
 
 	var content := ModContentDefinition.new()
 	content.display_name = entry_name
 	content.unique_name = "%s" % entry_name
-	content.worlds.push_back("res://Mods/%s.tscn" % entry_name.plus_file(worlds_path).plus_file(entry_name))
-	if ResourceSaver.save(mod_path.plus_file("content.tres"), content) != OK:
-		Logger.err("Can't save content at path %s" % mod_path + "content.tres", self)
+	content.worlds.push_back("res://Mods/%s.tscn" % entry_name.path_join(worlds_path).path_join(entry_name))
+	if ResourceSaver.save(mod_path.path_join("content.tres"), content) != OK:
+		LTSLogger.err("Can't save content at path %s" % mod_path + "content.tres", self)
 		return false
 
 	var world_config = WorldConfig.new()
 	world_config.title = entry_name
-	var path = mod_path.plus_file(worlds_path).plus_file(entry_name + "_config.tres")
+	var path = mod_path.path_join(worlds_path).path_join(entry_name + "_config.tres")
 	var err = ResourceSaver.save(path, world_config)
 	if err != OK:
-		Logger.err("Can't save WorldConfig at %s (Reason %s)" % [path, err], self)
+		LTSLogger.err("Can't save WorldConfig at %s (Reason %s)" % [path, err], self)
 		return false
 
 	return true
@@ -112,16 +112,16 @@ func _on_TracksList_user_added_entry(entry_name):
 	track_list.remove_entry(entry_name)
 	entry_name = to_file_name(entry_name)
 	if !_initialize_mod_directory(entry_name):
-		var msg: String = "Directory " + editor_directory + entry_name + " already exists.\nPlease choose a different name!"
+		var msg: String = "DirAccess " + editor_directory + entry_name + " already exists.\nPlease choose a different name!"
 		track_list.show_error(msg)
-		Logger.warn(msg, self)
+		LTSLogger.warn(msg, self)
 		return
 
 
 func _on_TracksList_user_pressed_action(entry_names):
 	var screenshot := Image.new()
 	var texture := ImageTexture.new()
-	if screenshot.load(entry_names[0].get_base_dir().plus_file("screenshot.png")) == OK:
+	if screenshot.load(entry_names[0].get_base_dir().path_join("screenshot.png")) == OK:
 		texture.create_from_image(screenshot)
 	else:
 		texture = null
@@ -133,7 +133,7 @@ func _on_TracksList_user_pressed_action(entry_names):
 func _on_TracksList_user_removed_entries(entry_names):
 	# jList is only in single selection mode. entry_names.size() == 1
 	assert(entry_names.size()==1)
-	jEssentials.remove_folder_recursively(editor_directory.plus_file(tracks[entry_names[0]][0].unique_name))
+	jEssentials.remove_folder_recursively(editor_directory.path_join(tracks[entry_names[0]][0].unique_name))
 
 
 func _on_Back_pressed() -> void:

@@ -11,7 +11,7 @@ dest_files=[ "res://.import/formsignal_hp.glb-758a5c14e4b52ec6f76b0745849252ba.s
 
 [params]
 
-nodes/root_type="Spatial"
+nodes/root_type="Node3D"
 nodes/root_name="Scene Root"
 nodes/root_scale=1.0
 nodes/custom_script=""

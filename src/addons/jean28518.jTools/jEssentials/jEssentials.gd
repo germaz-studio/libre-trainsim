@@ -16,7 +16,7 @@ func remove_all_pending_delayed_calls():
 
 
 func copy_folder_recursively(from : String, to : String):
-	var dir = Directory.new()
+	var dir = DirAccess.open("res://")
 	dir.make_dir_recursive(to)
 	if not dir.dir_exists(from):
 		return
@@ -28,26 +28,26 @@ func copy_folder_recursively(from : String, to : String):
 
 
 func create_directory(path : String):
-	var dir = Directory.new()
+	var dir = DirAccess.open("res://")
 	dir.make_dir_recursive(path)
 
 
 func copy_file(from : String, to : String):
-	var dir = Directory.new()
+	var dir = DirAccess.open("res://")
 	dir.copy(from, to)
 
 # Could be also used for moving files
 func rename_file(from: String, to : String):
-	var dir = Directory.new()
+	var dir = DirAccess.open("res://")
 	dir.rename(from, to)
 
 func remove_folder_recursively(path: String):
-	var dir = Directory.new()
-	if not dir.dir_exists(path):
+	if not DirAccess.dir_exists_absolute(path):
 		return
 	if not path.ends_with("/"):
 		path += "/"
-	if dir.open(path) != OK: return
+	var dir = DirAccess.open(path)
+	if dir == null: return
 	dir.list_dir_begin()
 	while(true):
 		var file = dir.get_next()
@@ -57,10 +57,9 @@ func remove_folder_recursively(path: String):
 		if dir.current_is_dir():
 			remove_folder_recursively(path + file + "/")
 		else:
-			var dir2 = Directory.new()
-			dir2.remove(path + file)
+			DirAccess.remove_absolute(path + file)
 	dir.list_dir_end()
-	dir.remove(path)
+	DirAccess.remove_absolute(path)
 
 
 func remove_duplicates(array : Array):
@@ -80,15 +79,15 @@ func show_message(message : String, title : String = ""):
 	message_box.anchor_right = 0.5
 	message_box.anchor_top = 0.5
 	message_box.anchor_bottom = 0.5
-	message_box.pause_mode = Node.PAUSE_MODE_PROCESS
+	message_box.process_mode = Node.PROCESS_MODE_ALWAYS
 	_saved_mouse_mode = Input.get_mouse_mode()
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-	message_box.connect("confirmed", self, "_on_message_box_okay_pressed")
+	message_box.connect("confirmed", Callable(self, "_on_message_box_okay_pressed"))
 	message_box.show()
 
 
 func does_path_exist(path : String):
-	var dir = Directory.new()
+	var dir = DirAccess.open("res://")
 	return dir.dir_exists(path) or dir.file_exists(path)
 
 
@@ -96,7 +95,7 @@ func does_path_exist(path : String):
 
 
 func _ready():
-	pause_mode = Node.PAUSE_MODE_PROCESS
+	process_mode = Node.PROCESS_MODE_ALWAYS
 
 
 func _process(delta):
@@ -113,18 +112,18 @@ func _handle_delayed_calls(delta):
 			var object = delayed_call_table.object[i]
 			if is_instance_valid(object):
 				object.callv(delayed_call_table.method[i], delayed_call_table.arg_array[i])
-			delayed_call_table.delay.remove(i)
-			delayed_call_table.object.remove(i)
-			delayed_call_table.method.remove(i)
-			delayed_call_table.arg_array.remove(i)
+			delayed_call_table.delay.remove_at(i)
+			delayed_call_table.object.remove_at(i)
+			delayed_call_table.method.remove_at(i)
+			delayed_call_table.arg_array.remove_at(i)
 			i -= 1 ## Because we remove here an entry
 		i += 1
 
 
 func _copy_folder_recursively_helper(from, to):
-	var dir = Directory.new()
-	dir.make_dir_recursive(to)
-	if dir.open(from) != OK: return
+	DirAccess.make_dir_recursive_absolute(to)
+	var dir = DirAccess.open(from)
+	if dir == null: return
 	dir.list_dir_begin()
 	while(true):
 		var file = dir.get_next()
@@ -135,9 +134,8 @@ func _copy_folder_recursively_helper(from, to):
 			print(from + file + "/" + "     " + to + file + "/")
 			_copy_folder_recursively_helper(from + file + "/", to + file + "/")
 		else:
-			var dir2 = Directory.new()
 			print(from + file + "     " + to + file)
-			dir2.copy(from + file, to + file)
+			DirAccess.copy_absolute(from + file, to + file)
 	dir.list_dir_end()
 
 

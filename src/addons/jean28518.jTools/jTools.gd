@@ -24,9 +24,9 @@ func handle_delayed_calls(delta):
 		if delayed_call_table.delay[i] <= 0:
 			var object = delayed_call_table.object[i]
 			object.callv(delayed_call_table.method[i], delayed_call_table.arg_array[i])
-			delayed_call_table.delay.remove(i)
-			delayed_call_table.object.remove(i)
-			delayed_call_table.method.remove(i)
-			delayed_call_table.arg_array.remove(i)
+			delayed_call_table.delay.remove_at(i)
+			delayed_call_table.object.remove_at(i)
+			delayed_call_table.method.remove_at(i)
+			delayed_call_table.arg_array.remove_at(i)
 			i -= 1 ## Because we remove here an entry
 		i += 1

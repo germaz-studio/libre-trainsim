@@ -16,6 +16,6 @@ func _on_Delete_pressed():
 	emit_signal("line_delete", line)
 
 func update_line(new_line):
-	$HBoxContainer/Line.text = String(new_line)
+	$HBoxContainer/Line.text = str(new_line)
 	line = new_line
 

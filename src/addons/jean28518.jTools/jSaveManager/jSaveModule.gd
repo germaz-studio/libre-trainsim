@@ -1,12 +1,12 @@
 class_name jSaveModule
-extends Reference
+extends RefCounted
 
 # Example: "res://Levels/Level1/Level1.save"
-export (String) var save_path = ""
+@export var save_path: String = ""
 
 
 func set_save_path(save_path : String):
-	print("Save Path set.")
+	print("Save Path3D set.")
 	self.save_path = save_path
 	reload()
 
@@ -38,7 +38,7 @@ func reload():
 
 func write_to_disk():
 	if _config == null:
-		Logger.err("Save path not configured correctly. Don't saving anything...", self)
+		LTSLogger.err("Save path not configured correctly. Don't saving anything...", self)
 		return
 	for key in _cache_main.keys():
 		_config.set_value("Main", key, _cache_main[key])
@@ -67,11 +67,11 @@ func _ready():
 
 func _load_current_config():
 	if save_path == "":
-		Logger.err("Save path not configured correctly. Not initializing jSaveModlue ", self)
+		LTSLogger.err("Save path not configured correctly. Not initializing jSaveModlue ", self)
 		return
 	_config = ConfigFile.new()
 
-	var dir = Directory.new()
+	var dir = DirAccess.open("res://")
 	dir.open(save_path.get_base_dir())
 
 	if not dir.file_exists(save_path):

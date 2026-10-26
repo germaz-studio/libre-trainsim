@@ -12,10 +12,10 @@ var _chunks_to_load := []  # Array[String] ; Queue
 
 var chunk_manager = null
 
-var _loader: ResourceInteractiveLoader
+var _loader: ResourceLoader
 var _currently_loading_chunk: String
 
-var _dir: Directory
+var _dir: DirAccess
 
 
 func load_chunks(new_chunks: Array):
@@ -26,7 +26,7 @@ func load_chunks(new_chunks: Array):
 			and chunk != _currently_loading_chunk:
 			_chunks_to_load.push_back(chunk)
 
-	if not _chunks_to_load.empty():
+	if not _chunks_to_load.is_empty():
 		set_process(true)
 
 
@@ -49,14 +49,14 @@ func unload_chunks(old_chunks: Array):
 
 
 func _ready() -> void:
-	_dir = Directory.new()
+	_dir = DirAccess.open("res://")
 	if _dir.open("res://") != OK:
-		Logger.err("Cannot open resource directory.", self)
+		LTSLogger.err("Cannot open resource directory.", self)
 		return
 
 
 func _process(delta: float) -> void:
-	if _chunks_to_load.empty():
+	if _chunks_to_load.is_empty():
 		set_process(false)
 		return
 
@@ -64,7 +64,7 @@ func _process(delta: float) -> void:
 		_currently_loading_chunk = _chunks_to_load.pop_front()
 		var file = _get_chunk_file_path(_currently_loading_chunk)
 		if _dir.file_exists(file):
-			_loader = ResourceLoader.load_interactive(file)
+			_loader = ResourceLoader.load_threaded_request(file)
 		else:
 			_spawn_empty_chunk()
 			_currently_loading_chunk = ""
@@ -72,8 +72,8 @@ func _process(delta: float) -> void:
 
 	assert(_loader != null)
 
-	var t = OS.get_ticks_msec()
-	while OS.get_ticks_msec() < t + MAX_LOAD_TIME_STEP:
+	var t = Time.get_ticks_msec()
+	while Time.get_ticks_msec() < t + MAX_LOAD_TIME_STEP:
 		var err = _loader.poll()
 		if err == ERR_FILE_EOF:
 			_spawn_chunk_from_res(_loader.get_resource())
@@ -81,7 +81,7 @@ func _process(delta: float) -> void:
 			_currently_loading_chunk = ""
 			break
 		elif err != OK:
-			Logger.err("Cannot load chunk %s (Reason %s)" % [_currently_loading_chunk, err], self)
+			LTSLogger.err("Cannot load chunk %s (Reason %s)" % [_currently_loading_chunk, err], self)
 			_loader = null
 			chunk_manager._send_message("Chunk could not be loaded, please check your logs!")
 			break
@@ -89,10 +89,10 @@ func _process(delta: float) -> void:
 
 func _spawn_chunk_from_res(resource):
 	if not resource is PackedScene:
-		Logger.warn("What? Your chunk is not a packed scene! %s" % _currently_loading_chunk, self)
+		LTSLogger.warn("What? Your chunk is not a packed scene! %s" % _currently_loading_chunk, self)
 		return
 
-	var chunk = resource.instance()
+	var chunk = resource.instantiate()
 	chunk.generate_grass = chunk_manager.world.current_world_config.generate_grass
 
 	_add_chunk_to_scene_tree(chunk)
@@ -101,7 +101,7 @@ func _spawn_chunk_from_res(resource):
 
 
 func _spawn_empty_chunk():
-	var chunk = chunk_prefab.instance()
+	var chunk = chunk_prefab.instantiate()
 	chunk.name = _currently_loading_chunk
 	chunk.chunk_position = chunk_manager.string_to_chunk(_currently_loading_chunk)
 	chunk.generate_grass = chunk_manager.world.current_world_config.generate_grass
@@ -114,7 +114,7 @@ func _spawn_empty_chunk():
 func _add_chunk_to_scene_tree(chunk):
 	# This should never happen! If it does, we're hiding a bug.
 	if chunk_manager.world.get_node("Chunks").has_node(chunk.name):
-		Logger.warn("Chunk already loaded: %s" % chunk.name, self)
+		LTSLogger.warn("Chunk already loaded: %s" % chunk.name, self)
 		_loaded_chunks.push_back(chunk.name)
 		chunk.free()
 		return
@@ -134,13 +134,13 @@ func _add_chunk_to_scene_tree(chunk):
 func _get_chunk_file_path(chunk: String):
 	var chunk_path := ""
 	if Root.Editor:
-		chunk_path = chunk_manager.editor.current_track_path.plus_file("chunks")
+		chunk_path = chunk_manager.editor.current_track_path.path_join("chunks")
 	else:
-		chunk_path = Root.current_track.get_base_dir().plus_file("chunks")
-	var chunk_file = chunk_path.plus_file(chunk) + ".tscn"
+		chunk_path = Root.current_track.get_base_dir().path_join("chunks")
+	var chunk_file = chunk_path.path_join(chunk) + ".tscn"
 
 	if Root.Editor:
-		var temp_file = chunk_path.plus_file(chunk) + "_temp.tscn"
+		var temp_file = chunk_path.path_join(chunk) + "_temp.tscn"
 		if _dir.file_exists(temp_file):
 			chunk_file = temp_file
 

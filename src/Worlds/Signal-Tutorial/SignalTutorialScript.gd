@@ -16,7 +16,7 @@ func init() -> void:
 		return
 
 	scenario = Root.current_scenario.get_file().get_basename()
-	Logger.log("Loading scenario %s" % scenario)
+	LTSLogger.log("Loading scenario %s" % scenario)
 
 	if world == null:
 		world = find_parent("World")
@@ -40,7 +40,7 @@ func _process(delta: float) -> void:
 	if scenario == "HV-Form-Signals":
 		hv_form_signals(delta)
 		return
-	elif scenario == "HV-Light-Signals":
+	elif scenario == "HV-Light3D-Signals":
 		hv_light_signals(delta)
 		return
 	elif scenario == "KS-Signals":
