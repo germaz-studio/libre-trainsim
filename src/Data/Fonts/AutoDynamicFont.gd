@@ -1,6 +1,6 @@
 @tool
 class_name AutoDynamicFont
-extends FontFile
+extends FontVariation
 
 @export var desktop_size := 20
 @export var mobile_size := 60
@@ -18,7 +18,4 @@ func set_debug_test_size(val: bool):
 
 # set_size is taken
 func adjust_size():
-	if OS.has_feature("mobile") or (OS.has_feature("editor") and debug_test_size):
-		size = mobile_size
-	else:
-		size = desktop_size
+	pass
