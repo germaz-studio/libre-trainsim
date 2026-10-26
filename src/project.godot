@@ -927,7 +927,5 @@ limits/debugger_stdout/max_chars_per_second=65536
 
 [rendering]
 
-threads/thread_model=2
-quality/directional_shadow/size=8192
-quality/filters/msaa=2
+quality/directional_shadow/size=2048
 environment/default_environment="res://Resources/Environments/BasicWorldEnvironment.tres"

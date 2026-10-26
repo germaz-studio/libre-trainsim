@@ -80,8 +80,7 @@ func _process(_delta: float) -> void:
 			update_progress_bar()
 			resources.push_back(loader.get_resource())
 			loader = null
-			if instance_thread.start(self, "_instanciate_scenes") != OK:
-				Logger.warn("Can't create instanciation thread. Loading in main thread", self)
+			if OS.has_feature("mobile") or instance_thread.start(self, "_instanciate_scenes") != OK:
 				_instanciate_scenes()
 				_clean_up_and_switch()
 				return
