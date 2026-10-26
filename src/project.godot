@@ -510,7 +510,7 @@ version/dirty=false
 version/broken=false
 version/custom=false
 version/commit=""
-version/label="v0.9.beta1"
+version/label=""
 version/diff_ignore="../.github/workflows/project.godot.ignores"
 
 [audio]
@@ -532,7 +532,6 @@ LoadingScreen="*res://Data/UI/loading_screen.tscn"
 InputHelper="*res://Data/Scripts/Singletons/input_helper.gd"
 DebugDraw="*res://addons/zylann.debug_draw/debug_draw.gd"
 DebugUi="*res://Data/UI/debug_ui.tscn"
-ControllerIcons="*res://addons/controller_icons/ControllerIcons.gd"
 
 [debug]
 

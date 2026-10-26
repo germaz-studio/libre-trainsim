@@ -1,0 +1,1 @@
+Initial stable Android release of Libre TrainSim by Germaz Studio with optimized 3D textures for 4 GB RAM.

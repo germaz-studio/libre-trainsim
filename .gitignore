@@ -28,4 +28,6 @@ src/.idea/
 
 # Ignore vendor specific asset files
 
-*.afdesign
+*.afdesign# Android build artifacts
+build/android/*.apk
+build/android/*.aab

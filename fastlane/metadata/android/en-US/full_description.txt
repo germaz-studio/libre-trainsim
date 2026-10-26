@@ -1,0 +1,15 @@
+Libre TrainSim is a free, realistic open-source 3D train driving simulator powered by Godot Engine, ported natively to Android for F-Droid by Oskar Gerlicz-Kowalczuk (Germaz Studio).
+
+Experience train simulation on mobile with complete cab controls, realistic signaling systems, passenger handling, and multiple tutorial scenarios.
+
+Features:
+* Realistic train driving physics and responsive touch controls (Mobile HUD)
+* German signaling system tutorials (Hp, Vr, Ks, Hl) and safety systems (SiFa, PZB)
+* Optimized 3D graphics for mobile devices with safe memory usage (works smoothly on 4 GB RAM)
+* Fullscreen immersive mode with customizable view distances
+* 100% Free and Open Source (GPL-3.0-or-later)
+* Completely offline, zero ads, zero telemetry, zero trackers
+
+Credits:
+* Original game and concept by Jean28518 & Libre-TrainSim Community
+* Android optimization, texture rework, and mobile packaging by Oskar Gerlicz-Kowalczuk (Germaz Studio)
